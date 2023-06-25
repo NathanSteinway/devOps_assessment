@@ -38,9 +38,13 @@ describe("Duel Duo tests", () => {
 
     // How to reference a dynamically generated class?
     // Keeps saying im using css selector method for some reason
-    let duoAddBtn = await driver.findElement(By.className("bot-btn"));
+    let drawBtn = await driver.findElement(By.id("draw"))
+
+    await drawBtn.click()
 
     await driver.sleep(3000)
+
+    let duoAddBtn = await driver.findElement(By.className("bot-btn"));
 
     await duoAddBtn.click()
 
