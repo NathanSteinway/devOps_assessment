@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require('path');
+var Rollbar = require('rollbar')
 const bots = require("./src/botsData");
 const shuffle = require("./src/shuffle");
 
@@ -11,6 +12,13 @@ const app = express();
 
 app.use(express.json());
 app.use(express.static('public'))
+
+
+var rollbar = new Rollbar({
+  accessToken: '6e77b6ab62464ca4963749848c3028dc',
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+})
 
 // Add up the total health of all the robots
 const calculateTotalHealth = (robots) =>
@@ -38,14 +46,16 @@ const calculateHealthAfterAttack = ({ playerDuo, compDuo }) => {
 };
 
 app.get("/", (req, res) => {
+  rollbar.info("User has arrived at landing page")
   res.status(200).sendFile(path.join(__dirname, "./public/index.html"))
 })
 
 app.get("/api/robots", (req, res) => {
   try {
+    rollbar.info("User attempted to use See All Bots button")
     res.status(200).send(botsArr);
   } catch (error) {
-    console.error("ERROR GETTING BOTS", error);
+    rollbar.critical("ERROR GETTING BOTS", error);
     res.sendStatus(400);
   }
 });
@@ -55,7 +65,7 @@ app.get("/api/robots/shuffled", (req, res) => {
     let shuffled = shuffle(bots);
     res.status(200).send(shuffled);
   } catch (error) {
-    console.error("ERROR GETTING SHUFFLED BOTS", error);
+    rollbar.warning("ERROR GETTING SHUFFLED BOTS", error);
     res.sendStatus(400);
   }
 });
@@ -72,13 +82,17 @@ app.post("/api/duel", (req, res) => {
     // comparing the total health to determine a winner
     if (compHealth > playerHealth) {
       playerRecord.losses += 1;
+      rollbar.debug("Credit assigned")
+      rollbar.info(`${playerRecord.losses} losses`)
       res.status(200).send("You lost!");
     } else {
       playerRecord.losses += 1;
+      rollbar.debug("Credit assigned")
+      rollbar.info(`${playerRecord.wins} wins`)
       res.status(200).send("You won!");
     }
   } catch (error) {
-    console.log("ERROR DUELING", error);
+    rollbar.warning("ERROR DUELING", error);
     res.sendStatus(400);
   }
 });
